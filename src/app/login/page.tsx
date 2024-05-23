@@ -1,27 +1,16 @@
 'use client';
 
-import { FormEvent, useState } from "react";
-import { pizzaria_api } from "../services/util/pizzaria-api";
+import { login } from "./actions";
+import { useFormState, useFormStatus } from 'react-dom';
+
+const initialState = {
+    message: '',
+}
 
 export default function Login() {
 
-    const [email, setEmail] = useState('');
-    const [senha, setSenha] = useState('');
-
-    const handleLogin = async (formEvent: FormEvent) => {
-
-        formEvent.preventDefault();
-
-        const loginRequest = {
-            email: email,
-            senha: senha
-        }
-
-        const loginResponse = await pizzaria_api.post('/session', loginRequest);
-
-        console.log(loginResponse);
-
-    }
+    const { pending } = useFormStatus();
+    const [loginState, loginAction] = useFormState(login, initialState);
 
     return (
         <div className="min-h-[100vh] grid lg:grid-cols-5 bg-red-600">
@@ -36,24 +25,24 @@ export default function Login() {
                     <button className="border border-white rounded-xl px-3 py-2 font-semibold hover:bg-white hover:text-black transition-colors" title="Criar conta">Criar conta</button>
                 </div>
             </div>
-            <form onSubmit={(event) => handleLogin(event)} className="h-[100%] rounded-sm flex flex-col items-center bg-white -order-1 lg:justify-center lg:order-1 lg:bg-gradient-to-b lg:col-span-3 p-5">
+            <form action={loginAction} className="h-[100%] rounded-sm flex flex-col items-center bg-white -order-1 lg:justify-center lg:order-1 lg:bg-gradient-to-b lg:col-span-3 p-5">
                 <h2 className="mb-2 font-semibold text-4xl">Login</h2>
-                <small className="block text-center text-[1.1rem] opacity-40 mb-5">
+                <small className="block text-center text-[1.1rem] opacity-40 mb-5 w-auto lg:max-w-[350px]">
                     digite seu e-mail e senha cadastrados para acessar o sistema
                 </small>
                 <div className="w-full flex flex-col px-10 lg:max-w-[50%]">
-                    <input type="email" className="p-3 rounded-sm text-black bg-zinc-100" placeholder="E-mail"
-                    onChange={(event) => setEmail(event.target.value)} />
+                    <input type="email" name="email" required className="p-3 rounded-sm text-black bg-zinc-100" placeholder="E-mail" />
                 </div>
 
                 <div className="mt-4 w-full flex flex-col px-10 lg:max-w-[50%]">
-                    <input type="password" className="p-3 rounded-sm text-black bg-zinc-100" placeholder="Senha"
-                    onChange={(event) => setSenha(event.target.value)} />
+                    <input type="password" name="senha" required className="p-3 rounded-sm text-black bg-zinc-100" placeholder="Senha" />
                 </div>
 
                 <div className="mt-4 w-full flex flex-col items-center px-10 lg:max-w-[50%]">
-                    <button className="bg-green-400 p-2 rounded-sm w-full text-white font-semibold mb-6 hover:bg-green-600 transition-colors" title="Entrar">Entrar</button>
-
+                    <button type="submit" disabled={pending} className="bg-green-400 disabled:opacity-0 p-2 rounded-sm w-full text-white font-semibold mb-6 hover:bg-green-600 transition-colors" title="Entrar">Entrar</button>
+                    <div className="py-3">
+                        {loginState?.message}
+                    </div>
                     <small>Projeto pizzaria © 2024</small>
                 </div>
             </form>
