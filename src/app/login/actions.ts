@@ -1,6 +1,7 @@
 'use server'
 
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export const login = async (prevState: any, formData: FormData) => {
 
@@ -20,16 +21,20 @@ export const login = async (prevState: any, formData: FormData) => {
     const sessionData = await loginResponse.json();
 
     if (loginResponse.status === 200) {
+        
         cookies().set('session', sessionData.token, {
             httpOnly: true,
             maxAge: 60 * 60 * 24 * 30,
             secure: false,
             path: '/'
         });
-    }
 
-    return {
-        message: sessionData.error
-    };
+        redirect('/products');
+        
+    } else {
+        return {
+            message: sessionData.error
+        };
+    }
 
 }
