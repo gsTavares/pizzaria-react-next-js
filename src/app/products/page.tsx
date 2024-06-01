@@ -1,9 +1,9 @@
 'use client';
 
-import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { FiEdit, FiMenu, FiTag, FiX } from "react-icons/fi";
-import { createProduct, getProducts, updateProduct } from "./actions";
+import { useEffect, useRef, useState } from "react";
+import { useFormState } from "react-dom";
+import { FiMenu, FiTag, FiX } from "react-icons/fi";
+import { createProduct, getCategories, getProducts } from "./actions";
 
 type Product = {
     id: string,
@@ -12,33 +12,44 @@ type Product = {
     descricao: string,
     preco: string,
     banner: string,
+    url?: string,
+}
+
+type Category = {
+    id: string,
+    nome: string
 }
 
 export default function Products() {
-
-    const params = useSearchParams();
-    const productId = params.get('productId');
-    let updateProductAction;
-
-    if (productId) {
-        updateProductAction = updateProduct.bind(null, productId);
-    }
 
     const [menuEnabled, setMenuEnabled] = useState(false);
     const [file, setFile] = useState<File>();
     const [preview, setPreview] = useState<string>();
     const [products, setProducts] = useState<Product[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
+
+    const [productFormState, productAction] = useFormState(createProduct, []);
+
+    const formRef = useRef<HTMLFormElement>(null)
 
     useEffect(() => {
 
-        const fetchProducts = async () => {
-            const products = await getProducts();
+        const fetchData = async () => {
+
+            if(Array.isArray(productFormState)) {
+                setFile(undefined);
+                formRef.current?.reset();
+            }
+
+            const [products, categories] = await Promise.all([getProducts(), getCategories()]);
             setProducts(products);
+            setCategories(categories);
+
         }
 
-        fetchProducts();
+        fetchData();
 
-    }, []);
+    }, [productFormState]);
 
     useEffect(() => {
 
@@ -106,10 +117,10 @@ export default function Products() {
                     </div>
                 </header>
 
-                <section className={`bg-red-600 ${menuEnabled ? 'blur-sm' : ''} shadow-xl`}>
-                    <div className="p-6 lg:px-24">
-                        <div className="bg-white rounded-lg p-6">
-                            <form action={productId ? updateProductAction : createProduct} className="lg:grid lg:grid-cols-4 lg:gap-x-5">
+                <section className={`bg-red-600 ${menuEnabled ? 'blur-sm' : ''} max-h-[60vh] lg:max-h-[70vh]`}>
+                    <div className="pt-6">
+                        <div className="bg-white mt-0 rounded-lg m-6 lg:mx-24 p-6 shadow-lg">
+                            <form ref={formRef} action={productAction} className="">
                                 <header className="mb-2 pb-2 text-xl font-bold col-span-4">
                                     <p>Gerenciar Produto</p>
                                 </header>
@@ -119,7 +130,9 @@ export default function Products() {
                                 </div>
                                 <div className="mt-3">
                                     <label className="block font-semibold">Categoria</label>
-                                    <input type="text" name="categoria" required placeholder="Categoria" className="p-2 border-2 w-full rounded-lg" />
+                                    <select name="id_categoria" className="p-2 border-2 w-full rounded-lg">
+                                        {categories.map(category => <option key={category.id} value={category.id}>{category.nome}</option>)}
+                                    </select>
                                 </div>
                                 <div className="mt-3">
                                     <label className="block font-semibold">Descrição</label>
@@ -132,13 +145,17 @@ export default function Products() {
                                 <div className="mt-3 flex flex-col">
                                     <label className="block font-semibold">Foto do produto</label>
                                     <label className="block cursor-pointer mt-1 rounded-lg border-2 border-red-600 w-max p-2" htmlFor="foto">Escolher arquivo</label>
-                                    <input type="file" id="foto" name="foto" accept=".png, .svg, .jpg, .jpeg" onChange={(event) => setFile(event.target.files?.[0])} className="hidden" />
+                                    <input type="file" id="foto" name="file" accept=".png, .svg, .jpg, .jpeg" onChange={(event) => setFile(event.target.files?.[0])} className="hidden" />
 
                                     {
                                         file ?
                                             <img src={preview} alt={file?.name} className="w-[150px] h-[150px] mt-3" />
                                             : null
                                     }
+
+                                    <div className="py-2">
+                                        {productFormState.message && !file ? <p className="text-red-600">{productFormState.message}</p> : null}
+                                    </div>
 
                                 </div>
 
@@ -148,36 +165,36 @@ export default function Products() {
                             </form>
                         </div>
                     </div>
+
+                    <section className={`${menuEnabled ? 'blur-sm' : ''} w-full overflow-x-scroll p-6 lg:overflow-x-hidden lg:flex lg:flex-col lg:items-center bg-white`}>
+                        <table className="min-w-full">
+                            <thead>
+                                <tr>
+                                    <th className="min-w-[150px] border p-2">Nome</th>
+                                    <th className="min-w-[150px] border p-2">Categoria</th>
+                                    <th className="min-w-[150px] border p-2">Descrição</th>
+                                    <th className="min-w-[150px] border p-2">Preço</th>
+                                    <th className="min-w-[150px] border p-2">Foto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {products.map(product =>
+                                    <tr key={product.id}>
+                                        <td className="border p-2">{product.nome}</td>
+                                        <td className="border p-2">{product.categoria ?? 'Não informada'}</td>
+                                        <td className="border p-2">{product.descricao}</td>
+                                        <td className="border p-2">{product.preco}</td>
+                                        <td className="border p-2">
+                                            <a href={product.url} className="text-blue-600 underline" target="_blank">Ver foto</a>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </section>
                 </section>
 
-                <section className={`${menuEnabled ? 'blur-sm' : ''} w-full overflow-x-scroll p-6 lg:flex lg:flex-col lg:items-center`}>
-                    <table className="max-w-full">
-                        <thead>
-                            <tr>
-                                <th className="min-w-[150px] border p-2">Nome</th>
-                                <th className="min-w-[150px] border p-2">Categoria</th>
-                                <th className="min-w-[150px] border p-2">Descrição</th>
-                                <th className="min-w-[150px] border p-2">Preço</th>
-                                <th className="min-w-[150px] border p-2">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {products.map(product =>
-                                <tr key={product.id}>
-                                    <td className="border p-2">{product.nome}</td>
-                                    <td className="border p-2">{product.categoria ?? 'Não informada'}</td>
-                                    <td className="border p-2">{product.descricao}</td>
-                                    <td className="border p-2">{product.preco}</td>
-                                    <td className="border p-2 flex items-center justify-center">
-                                        <button>
-                                            <FiEdit size={32} className="text-orange-500" />
-                                        </button>
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </section>
+
             </main>
         </>
     );
