@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFormState } from "react-dom";
 import { FiMenu, FiTag, FiX } from "react-icons/fi";
 import { createProduct, getCategories, getProducts } from "./actions";
@@ -30,7 +30,13 @@ export default function Products() {
 
     const [productFormState, productAction] = useFormState(createProduct, []);
 
-    const formRef = useRef<HTMLFormElement>(null)
+    const [search, setSearch] = useState('');
+
+    const formRef = useRef<HTMLFormElement>(null);
+
+    const filteredProducts = useMemo(() => {
+        return products.filter(product => JSON.stringify(product).toLowerCase().includes(search.toLowerCase()));
+      }, [products, search]);
 
     useEffect(() => {
 
@@ -140,7 +146,7 @@ export default function Products() {
                                 </div>
                                 <div className="mt-3">
                                     <label className="block font-semibold">Preço</label>
-                                    <input type="text" name="preco" required placeholder="Preço" className="p-2 border-2 w-full rounded-lg" />
+                                    <input type="number" name="preco" required step=".01" min={0} placeholder="Preço" className="p-2 border-2 w-full rounded-lg" />
                                 </div>
                                 <div className="mt-3 flex flex-col">
                                     <label className="block font-semibold">Foto do produto</label>
@@ -166,6 +172,10 @@ export default function Products() {
                         </div>
                     </div>
 
+                    <section className="p-6 py-3">
+                        <input type="text" className="w-full border-2 p-2 rounded-lg" onChange={(event) => setSearch(event.target.value)} placeholder="Pesquisar produto..." />
+                    </section>
+
                     <section className={`${menuEnabled ? 'blur-sm' : ''} w-full overflow-x-scroll p-6 lg:overflow-x-hidden lg:flex lg:flex-col lg:items-center bg-white`}>
                         <table className="min-w-full">
                             <thead>
@@ -178,13 +188,13 @@ export default function Products() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {products.map(product =>
+                                {filteredProducts.map(product =>
                                     <tr key={product.id}>
                                         <td className="border p-2">{product.nome}</td>
                                         <td className="border p-2">{product.categoria ?? 'Não informada'}</td>
                                         <td className="border p-2">{product.descricao}</td>
                                         <td className="border p-2">{product.preco}</td>
-                                        <td className="border p-2">
+                                        <td className="border p-2 text-center">
                                             <a href={product.url} className="text-blue-600 underline" target="_blank">Ver foto</a>
                                         </td>
                                     </tr>
