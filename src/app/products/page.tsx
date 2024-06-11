@@ -32,17 +32,25 @@ export default function Products() {
 
     const [search, setSearch] = useState('');
 
+    const [page, setPage] = useState(1);
+    const [size, setSize] = useState(5);
+
     const formRef = useRef<HTMLFormElement>(null);
 
     const filteredProducts = useMemo(() => {
-        return products.filter(product => JSON.stringify(product).toLowerCase().includes(search.toLowerCase()));
-      }, [products, search]);
+        return products.filter(product => JSON.stringify(product).toLowerCase().includes(search.toLowerCase()))
+            .slice((page - 1) * size, page * size);
+    }, [products, search, page, size]);
+
+    const getMaxPages = () => {
+        return Math.ceil(products.length / size);
+    }
 
     useEffect(() => {
 
         const fetchData = async () => {
 
-            if(Array.isArray(productFormState)) {
+            if (Array.isArray(productFormState)) {
                 setFile(undefined);
                 formRef.current?.reset();
             }
@@ -173,7 +181,10 @@ export default function Products() {
                     </div>
 
                     <section className="p-6 py-3">
-                        <input type="text" className="w-full border-2 p-2 rounded-lg" onChange={(event) => setSearch(event.target.value)} placeholder="Pesquisar produto..." />
+                        <input type="text" className="w-full border-2 p-2 rounded-lg" onChange={(event) => {
+                            setSearch(event.target.value);
+                            setPage(1);
+                        }} placeholder="Pesquisar produto..." />
                     </section>
 
                     <section className={`${menuEnabled ? 'blur-sm' : ''} w-full overflow-x-scroll p-6 lg:overflow-x-hidden lg:flex lg:flex-col lg:items-center bg-white`}>
@@ -201,6 +212,27 @@ export default function Products() {
                                 )}
                             </tbody>
                         </table>
+                    </section>
+
+                    <section className="p-6 flex items-center justify-center gap-10 pb-20">
+                        <div className="flex items-center gap-3">
+                            <span>Items por página</span>
+                            <select className="rounded-lg border-2 border-zinc-200 p-2 hover:cursor-pointer" value={size} onChange={(event) => {
+                                setSize(Number(event.target.value))
+                                setPage(1);
+                            }}>
+                                <option value="5">5</option>
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <div className="flex items-center justify-center gap-2">
+                            <button className="p-2 w-[30px] rounded-lg border-2 border-zinc-200 hover:cursor-pointer disabled:opacity-50" disabled={page === 1} onClick={() => setPage((prevState) => prevState - 1)}>{'<'}</button>
+                            <span>{page}</span>
+                            <button className="p-2 w-[30px] rounded-lg border-2 border-zinc-200 hover:cursor-pointer disabled:opacity-50" disabled={page === getMaxPages()} onClick={() => setPage((prevState) => prevState + 1)}>{'>'}</button>
+                        </div>
                     </section>
                 </section>
 
