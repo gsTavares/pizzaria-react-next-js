@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFormState } from "react-dom";
 import { FiMenu, FiTag, FiX } from "react-icons/fi";
-import { createProduct, getCategories, getProducts } from "./actions";
+import { createProduct, getCategories, getProducts, logout } from "./actions";
 
 type Product = {
     id: string,
@@ -100,7 +100,9 @@ export default function Products() {
                         <FiTag />
                     </li>
                     <li className="mt-3">
-                        <button className="border border-red-600 rounded-xl px-4 py-2 text-red-600 w-[50%]">Logout</button>
+                        <form action={logout}>
+                            <button className="border border-red-600 rounded-xl px-4 py-2 text-red-600 w-[50%]">Logout</button>
+                        </form>
                     </li>
                 </ul>
             </nav>
@@ -126,7 +128,9 @@ export default function Products() {
                             </ul>
                         </nav>
                         <div>
-                            <button className="lg:border lg:border-red-600 lg:rounded-xl lg:px-4 lg:py-2 lg:text-red-600 lg:hover:bg-red-600 lg:hover:text-white">Logout</button>
+                            <form action={logout}>
+                                <button className="lg:border lg:border-red-600 lg:rounded-xl lg:px-4 lg:py-2 lg:text-red-600 lg:hover:bg-red-600 lg:hover:text-white">Logout</button>
+                            </form>
                         </div>
                     </div>
                 </header>

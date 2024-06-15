@@ -1,6 +1,7 @@
 'use server'
 
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export const createProduct = async (prevState: any, formData: FormData) => {
 
@@ -55,4 +56,9 @@ export const getCategories = async () => {
     const data = await products.json();
     return data;
 
+}
+
+export const logout = async (formData: any) => {
+    cookies().delete('session');
+    redirect('/');
 }
